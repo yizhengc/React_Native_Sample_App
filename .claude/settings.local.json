@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx expo:*)",
+      "Bash(npx tsc:*)",
+      "Bash(./gradlew app:assembleDebug)",
+      "Bash(/usr/libexec/java_home -v 17)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 17\\) ./gradlew app:assembleDebug --configure-on-demand --build-cache)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
+    ]
+  }
+}
