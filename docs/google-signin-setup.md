@@ -95,9 +95,39 @@ const userInfo = await GoogleSignin.signIn();
 | Android | Package: `com.ec2ai.focusmav` + SHA-1 fingerprint |
 
 ### Get Android debug SHA-1
+
+**IMPORTANT: Expo uses a local keystore, NOT the global one.** The debug build is signed with `android/app/debug.keystore`, not `~/.android/debug.keystore`. These are different files with different keys. Using the wrong SHA-1 causes `DEVELOPER_ERROR` at runtime.
+
+**Method 1 — From the built APK (most reliable):**
+
+Build the app first (`npx expo run:android`), then extract the SHA-1 from the actual APK:
+```bash
+# Use the correct build-tools version for your project
+$(ANDROID_HOME)/build-tools/36.1.0/apksigner verify --print-certs \
+  android/app/build/outputs/apk/debug/app-debug.apk | grep SHA-1
 ```
-keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA1
+
+**Method 2 — From the local keystore:**
+```bash
+keytool -list -v -keystore android/app/debug.keystore -alias androiddebugkey \
+  -storepass android -keypass android | grep SHA1
 ```
+
+**Method 3 — From the global keystore (may NOT match the build):**
+```bash
+keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
+  -storepass android -keypass android | grep SHA1
+```
+
+To check which keystore the build uses, look at `android/app/build.gradle`:
+```groovy
+signingConfigs {
+    debug {
+        storeFile file('debug.keystore')  // relative to android/app/
+    }
+}
+```
+
 Requires Java 17. Install with: `brew install --cask temurin@17`
 
 ---
