@@ -232,3 +232,59 @@ Since the old client IDs were pushed to a public repo, they exist in git history
 | `.env` | OAuth client IDs | Yes |
 | `android/app/google-services.json` | Android client ID, API key | Yes (via `/android`) |
 | `ios/` | Info.plist with iOS URL scheme | Yes (via `/ios`) |
+
+---
+
+## Fresh Clone / Prebuild Setup
+
+Both `/ios` and `/android` are gitignored — they are generated native folders managed by Expo. Running `npx expo prebuild` or `npx expo run:*` regenerates them.
+
+### What survives automatically (via `app.config.js` + plugins)
+- iOS URL scheme — configured by `@react-native-google-signin/google-signin` plugin's `iosUrlScheme` in `app.config.js`
+- Gradle `google-services` plugin — should be applied automatically by the `@react-native-google-signin/google-signin` Expo config plugin
+
+**IMPORTANT:** `npx expo run:ios/android` skips prebuild if `ios/` or `android/` already exists. Plugin changes and `.env` updates are only applied during prebuild. If you change `.env` or `app.config.js`, you must force a clean prebuild:
+```bash
+npx expo prebuild --clean
+# then build
+npx expo run:ios   # or npx expo run:android
+```
+
+### What requires manual action after fresh prebuild
+
+**1. Place `google-services.json` for Android:**
+
+Download from Firebase Console → Project Settings → Your Android app → `google-services.json`, then copy it to:
+```
+android/app/google-services.json
+```
+
+**2. Create `.env` from `.env.example`:**
+```bash
+cp .env.example .env
+# Then fill in real client IDs
+```
+
+**3. Verify iOS URL scheme (if plugin fails to apply):**
+
+If Google Sign-In gives "missing URL schemes" error on iOS, manually add the URL scheme to `ios/FocusMav/Info.plist` under `CFBundleURLSchemes`:
+```
+com.googleusercontent.apps.YOUR_IOS_CLIENT_ID
+```
+(See the "ios/FocusMav/Info.plist" section above for the full XML.)
+
+### Full setup after fresh clone
+```bash
+npm install
+cp .env.example .env          # fill in real client IDs
+npx expo prebuild --clean     # generates ios/ and android/ from app.config.js
+# For Android: place google-services.json in android/app/
+npx expo run:ios              # or npx expo run:android
+```
+
+### After changing `.env` or `app.config.js`
+```bash
+npx expo prebuild --clean     # regenerate native folders with new values
+# For Android: re-place google-services.json in android/app/
+npx expo run:ios              # or npx expo run:android
+```
