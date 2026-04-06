@@ -156,3 +156,79 @@ Set Java 17 as default:
 ```bash
 echo 'export JAVA_HOME=$(/usr/libexec/java_home -v 17)' >> ~/.zshrc
 ```
+
+---
+
+## Credential Security
+
+### Problem
+OAuth client IDs were initially hardcoded in `contexts/auth.tsx`, `app.json`, and `docs/`. These were committed and pushed to a public GitHub repo.
+
+### How We Fixed It
+
+**1. Move secrets to `.env` (gitignored):**
+
+Create a `.env` file in the project root (never committed):
+```
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=your-ios-client-id.apps.googleusercontent.com
+```
+
+Expo SDK 54+ reads `EXPO_PUBLIC_*` vars from `.env` automatically — no extra packages needed.
+
+**2. Reference env vars in code:**
+
+`contexts/auth.tsx`:
+```ts
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!;
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!;
+```
+
+**3. Convert `app.json` → `app.config.js` for dynamic values:**
+
+`app.json` doesn't support env vars. Convert to `app.config.js`:
+```js
+const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
+const iosUrlScheme = iosClientId
+  ? `com.googleusercontent.apps.${iosClientId.replace('.apps.googleusercontent.com', '')}`
+  : '';
+
+export default {
+  expo: {
+    // ...
+    plugins: [
+      ['@react-native-google-signin/google-signin', { iosUrlScheme }],
+    ],
+  },
+};
+```
+
+**4. Add `.env` to `.gitignore` and provide `.env.example`:**
+
+`.gitignore`:
+```
+.env
+.env*.local
+```
+
+`.env.example` (committed, with placeholder values):
+```
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=your-ios-client-id.apps.googleusercontent.com
+```
+
+**5. Rotate credentials (recommended):**
+
+Since the old client IDs were pushed to a public repo, they exist in git history even after removal. To fully invalidate them:
+1. Go to Google Cloud Console → APIs & Services → Credentials
+2. Delete the old Web, iOS, and Android OAuth clients
+3. Create new ones with the same settings
+4. Update `.env` and `google-services.json` with the new IDs
+5. Rebuild both iOS and Android
+
+### Files That Should Never Be Committed
+| File | Contains | Gitignored? |
+|---|---|---|
+| `.env` | OAuth client IDs | Yes |
+| `android/app/google-services.json` | Android client ID, API key | Yes (via `/android`) |
+| `ios/` | Info.plist with iOS URL scheme | Yes (via `/ios`) |
