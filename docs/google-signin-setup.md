@@ -65,7 +65,7 @@ The plugin should add the URL scheme automatically, but if it doesn't (e.g. the 
 
 The `iosUrlScheme` is the iOS client ID with `com.googleusercontent.apps.` prepended, e.g.:
 ```
-com.googleusercontent.apps.149436588546-o1e3gokl61q91kon989fucjmm2uj1ccf
+com.googleusercontent.apps.YOUR_IOS_CLIENT_ID
 ```
 
 ### contexts/auth.tsx

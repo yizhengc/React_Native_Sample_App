@@ -4,10 +4,9 @@ import {
 } from '@react-native-google-signin/google-signin';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-// Web Client ID — used for Android and token verification
-const GOOGLE_WEB_CLIENT_ID = '149436588546-s69hu777jcj5tpttvhcl0vct6ou0vdap.apps.googleusercontent.com';
-// iOS Client ID — from Google Cloud Console → iOS OAuth client
-const GOOGLE_IOS_CLIENT_ID = '149436588546-o1e3gokl61q91kon989fucjmm2uj1ccf.apps.googleusercontent.com';
+// Set these in .env (see .env.example)
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!;
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!;
 
 export type User = {
   id: string;
